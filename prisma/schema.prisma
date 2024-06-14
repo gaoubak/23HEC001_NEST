@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int        @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String     @unique
+  password    String
+  twoFASecret String?
+  enable2FA   Boolean    @default(false)
+  apiKey      String
+  playLists   Playlist[]
+  artist      Artist?
+}
+
+model Artist {
+  id          Int           @id @default(autoincrement())
+  user        User          @relation(fields: [userId], references: [id])
+  userId      Int           @unique
+  songs       Song[]        @relation("SongArtists")
+  SongArtists SongArtists[]
+}
+
+model Playlist {
+  id     Int    @id @default(autoincrement())
+  name   String
+  songs  Song[]
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int
+}
+
+model Song {
+  id           Int           @id @default(autoincrement())
+  title        String
+  releasedDate DateTime
+  duration     String
+  lyrics       String
+  artists      Artist[]      @relation("SongArtists")
+  playList     Playlist?     @relation(fields: [playListId], references: [id])
+  playListId   Int?
+  SongArtists  SongArtists[]
+}
+
+
+model SongArtists {
+  id       Int      @id @default(autoincrement())
+  song     Song     @relation(fields: [songId], references: [id])
+  songId   Int
+  artist   Artist   @relation(fields: [artistId], references: [id])
+  artistId Int
+}
